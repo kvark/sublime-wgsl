@@ -1,0 +1,84 @@
+%YAML 1.2
+---
+name: WGSL
+file_extensions:
+  - wgsl
+scope: source.wgsl
+contexts:
+  main:
+    - include: decorator
+    - include: item
+    - include: comments
+  decorator:
+    - match: '\[\['
+      scope: punctuation.section.decorator.begin.wgsl
+      push:
+        - meta_scope: meta.structure.decorator.wgsl
+        - match: '\]\]'
+          scope: punctuation.section.decorator.end.wgsl
+          pop: true
+        - match: ','
+          scope: punctuation.separator.decorator.wgsl
+        - match: '[a-z_]+'
+          scope: meta.structure.attribute.key.wgsl
+        - match: '\('
+          scope: punctuation.section.attribute.begin.wgsl
+          push:
+            - meta_scope: meta.structure.attribute.wgsl
+            - match: '\)'
+              scope: punctuation.section.attribute.end.wgsl
+              pop: true
+            - match: '[a-z_]+'
+              scope: meta.structure.attribute.value.wgsl
+  comments:
+    - match: (//).*$\n?
+      scope: comment.line.double-slash.wgsl
+      captures:
+        1: punctuation.definition.comment.wgsl
+  item:
+    - include: variable
+  variable:
+    - match: 'var'
+      scope: meta.structure.var.begin.wgsl
+      push:
+        - meta_scope: meta.structure.var.wgsl
+        - match: '<[a-z_]+>'
+          scope: meta.structure.var.storage_class.wsgl
+        - match: '[a-zA-z_]+'
+          scope: meta.structure.var.name.wsgl
+        - match: ':'
+          scope: punctuation.section.var.wsgl
+        - include: type
+        - match: ';'
+          scope: meta.structure.var.end.wgsl
+          pop: true
+  type:
+    - match: '.*'
+      scope: meta.structure.type.wgsl
+  constant:
+    - match: \b(true|false)\b
+      scope: constant.language.wgsl
+  number:
+    # handles integer and decimal numbers
+    - match: |-
+        (?x:         # turn on extended mode
+          -?         # an optional minus
+          (?:
+            0        # a zero
+            |        # ...or...
+            [1-9]    # a 1-9 character
+            \d*      # followed by zero or more digits
+          )
+          (?:
+            (?:
+              \.     # a period
+              \d+    # followed by one or more digits
+            )?
+            (?:
+              [eE]   # an e character
+              [+-]?  # followed by an option +/-
+              \d+    # followed by one or more digits
+            )?       # make exponent optional
+          )?         # make decimal portion optional
+        )
+      scope: constant.numeric.wgsl
